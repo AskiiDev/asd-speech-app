@@ -15,7 +15,6 @@ def delay(s):
     global engine
 
     engine.runAndWait()
-    print("done")
     is_speaking = False
 
 
@@ -58,9 +57,6 @@ def say_sentence():
     print("ok")
 
     wait = Thread(target=lambda: delay(len(sentence)*1))
-    #run = Thread(target=engine.runAndWait)
-
-    #run.start()
     wait.start()
 
 

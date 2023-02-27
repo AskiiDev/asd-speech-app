@@ -248,9 +248,8 @@ def get_all_words():
 
     try:
         with open("data/words.json", "r") as j:
-            data = json.load(j)
+            returned_data = json.load(j)
 
-            returned_data = data
             j.close()
     except FileNotFoundError:
         pass
