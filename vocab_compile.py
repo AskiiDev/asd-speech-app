@@ -195,7 +195,7 @@ def init_words():
 
     # notation:
     #   {
-    #       <word>: {<pos_tags_list>, <categories1_list, categories2_list>}
+    #       <word>: {<pos_tags_list>, <categories1_list>, <categories2_list>}
     #   }
 
     # check if the file exists, if not create an empty new one

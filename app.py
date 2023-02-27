@@ -70,7 +70,7 @@ def init_kv():
     kv.close()
 
 
-init_kv()
+# init_kv()
 
 
 class Panel(Widget):

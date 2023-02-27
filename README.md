@@ -10,9 +10,7 @@ A tool to download images using the duckduckgo_images_api library, compress them
 
 # vocab_compile.py
 A tool to pre-process a large collection of data analysed by the NLTK toolkit
-
-- pos (part of speech) tags
-- categories 
-
+    
+     get_word(word) -> <word>: {<pos_tags_list>, <categories1_list>, <categories2_list>}
 # speech_engine.py
 A tool to utilise the pyttsx3 text to speech library
