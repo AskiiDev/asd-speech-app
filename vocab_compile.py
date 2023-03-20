@@ -1,6 +1,8 @@
 import os.path
 
 from nltk.downloader import download
+from dataclasses import dataclass
+import json
 
 download('punkt')
 download('averaged_perceptron_tagger')
@@ -12,11 +14,7 @@ from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from nltk.corpus import wordnet
 from nltk.tag import pos_tag
-
 from word_forms.word_forms import get_word_forms
-from tqdm import tqdm
-
-import json
 
 lemmatizer = WordNetLemmatizer()
 
@@ -50,16 +48,19 @@ def convert_to_wn_tag(tags):
             case _:
                 pass
 
-    return converted_tags
+    return tuple(converted_tags)
 
 
 def get_pos_tags(word):
     wn_tags = []
     forms = get_word_forms(word)
 
-    # the wordnet solution from the word_forms library provides multiple pos tags but does not correctly identify
-    # numbers, determiners/articles or pronouns
-    # simply check if any valid inflections exist
+    """
+    the wordnet solution from the word_forms library provides pos tag classifications but does not correctly identify
+    numbers, determiners/articles or pronouns.
+    """
+
+    # use word_forms to get base pos tags
     if len(forms['n']) > 1:
         wn_tags.append("NOUN")
     if len(forms['a']) > 1:
@@ -76,9 +77,7 @@ def get_pos_tags(word):
     if len(tags) < 1 and "NUM" not in tags:
         tags = wn_tags
 
-    # this process is slow, however it provides far more useful results as nltk does not support returning more than 1
-    # pos tag, which it tries to guess the context relevance of (not helpful here)
-    return tags
+    return tuple(tags)
 
 
 # returns all the different word forms - as a noun, verb, adj, adverb
@@ -90,7 +89,7 @@ def get_forms(word):
     returned_forms.extend(list(get_word_forms(word)['r']))  # adverbs
 
     # convert to a set to remove duplicates and convert back to a list
-    return list(set(returned_forms))
+    return tuple(set(returned_forms))
 
 
 def get_contexts(word):
@@ -98,37 +97,35 @@ def get_contexts(word):
     synsets = wordnet.synsets(word)
 
     for s in synsets:
+        # synsets are formatted as "word.pos.n"
         temp = s.name().split(".")
+
         if temp[0] == word:
             returned_contexts.append(temp[2])
 
-    return returned_contexts
+    return tuple(returned_contexts)
 
 
 # used to traverse a tree of word categories
 # go down until it reaches the root hypernym (entity)
-def traverse_branch(arr, results=None):
+def traverse_tree(arr, results=None):
     if results is None:
         results = []
 
-        # initialise results with first branches
         for hypernym in arr:
             results.append(hypernym)
 
     for i in arr:
-        # create hypernyms for every hypernym
         name = i.name().split(".")
         hypernyms = wordnet.synset(name[0] + '.' + name[1] + '.' + name[2]).hypernyms()
 
-        # add results and traverse down the new branches
+        # add results and continue to traverse down the new branches
         for h in hypernyms:
             results.append(h)
 
-        # traverse the next branches
-        traverse_branch(hypernyms, results)
+        traverse_tree(hypernyms, results)
 
-    # convert to set and back to list to remove duplicates
-    return list(set(results))
+    return tuple(set(results))
 
 
 # this function will retrieve pos tags if necessary, but providing them as in input is much faster
@@ -157,7 +154,7 @@ def get_categories(word, pos=None, contexts=None, check_forms=False):
                 # in the case that there are no hypernyms, we catch the error and continue
                 try:
                     # pos = part of speech
-                    hypernyms = traverse_branch(wordnet.synset(f + '.' + t + '.' + c).hypernyms())
+                    hypernyms = traverse_tree(wordnet.synset(f + '.' + t + '.' + c).hypernyms())
 
                     for i in hypernyms:
                         # this will return the category in the form of 'category.n.0#'
@@ -166,15 +163,11 @@ def get_categories(word, pos=None, contexts=None, check_forms=False):
                 except WordNetError:
                     pass
 
-    # neat trick to get shared values between the two arrays
     # filter out irrelevant classifications
-    return list(set(classifications).intersection(categories))
-    # once again, list(set()) converts it into a set to remove duplicates and then back into a list
-    # return list(set(classifications))
+    return tuple(set(classifications).intersection(categories))
 
 
 # a function that searches all possible synsets of the word, just in case a broad search is required
-# 95% of the time the regular get_categories(x) should be good enough
 def get_all_categories(word, check_forms=False):
     classifications = []
 
@@ -186,17 +179,12 @@ def get_all_categories(word, check_forms=False):
         classifications.extend(get_categories(temp[0], temp[1], temp[2], check_forms))
 
     # once again, list(set()) converts it into a set to remove duplicates and then back into a list
-    return list(set(classifications))
+    return tuple(set(classifications))
 
 
 def init_words():
     vocab_list = open("data/words.txt", 'r')
     vocabulary = vocab_list.read().splitlines()
-
-    # notation:
-    #   {
-    #       <word>: {<pos_tags_list>, <categories1_list>, <categories2_list>}
-    #   }
 
     # check if the file exists, if not create an empty new one
     if not (os.path.isfile("data/words.json") and os.access("data/words.json", os.R_OK)):
@@ -210,12 +198,26 @@ def init_words():
         existing_data = json.load(j)
 
         # update dictionary
-        for v in tqdm(vocabulary):
+        for v in vocabulary:
             if v not in list(existing_data):
+                """
+                format:
+                <word>
+                {
+                    pos: str
+                    uses: float
+                    categories: list
+                    all_categories: list
+                }
+                """
+
                 existing_data.update(
-                    {v: {"pos": get_pos_tags(v),
-                         "cat": get_categories(v),
-                         "all_cat": get_all_categories(v)}})
+                    {v: {
+                        "pos":     get_pos_tags(v),
+                        "uses":    0,
+                        "ctg":     get_categories(v),
+                        "all_ctg": get_all_categories(v)
+                    }})
 
         j.close()
 

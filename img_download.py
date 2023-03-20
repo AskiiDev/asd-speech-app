@@ -2,12 +2,11 @@ from duckduckgo_images_api import search
 from urllib.error import HTTPError
 from io import BytesIO
 from os import listdir
-from tqdm import tqdm
 import urllib.request
 from PIL import Image
 
 opener = urllib.request.build_opener()
-vocabulary = None
+vocabulary = []
 downloader_ready = False
 
 
@@ -29,7 +28,7 @@ def init_downloader():
     downloader_ready = True
 
 
-# download a compressed image version of the image
+# download a compressed image using duckduckgo-api
 def download_image(keyword, result=0, context="clipart"):
     global opener
     global downloader_ready
@@ -38,7 +37,6 @@ def download_image(keyword, result=0, context="clipart"):
         init_downloader()
 
     try:
-        # search using duckduckgo image search api
         # get the image link from the first result of the image search (index 0)
         # note -- searching for clipart specifically provides more appropriate results
         response = opener.open(search("'" + keyword + "' " + context, 1)[result]["image"])
@@ -59,18 +57,14 @@ def download_image(keyword, result=0, context="clipart"):
 def verify_downloads(extension=".jpg"):
     global vocabulary
 
-    # loop through every word in the list
-    for check in tqdm(vocabulary):
+    for check in vocabulary:
 
         # check if the file exists in the img directory
         if not(check.strip() + extension in listdir("img")):
-
-            # attempt to download the missing file
             download_image(check.strip())
 
 
 def get_image(word, retries=0, max_retries=2):
-    # just check if the function has been run before, and return a placeholder if past max retries
     if retries >= max_retries:
         return "img/default_placeholder.png"
 
@@ -78,6 +72,5 @@ def get_image(word, retries=0, max_retries=2):
     elif word + ".jpg" in listdir("img"):
         return str("img/"+word+".jpg")
     else:
-        # attempt to download an image for the file
         download_image(word)
         return get_image(word, retries + 1)

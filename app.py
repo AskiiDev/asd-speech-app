@@ -99,15 +99,15 @@ class VocabGrid(GridLayout):
 vocab_grid = None
 
 
-# Define the main app class
+# Main app class
 class IAApp(App):
     def on_resize(self, widget, *args):
         global vocab_grid
-
         vocab_grid.cols = int((Window.size[0] / 190))
 
     def build(self):
         global vocab_grid
+
         # the main container for the application
         main_container = AppLayout(orientation="vertical", spacing=2)
 
