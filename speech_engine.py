@@ -1,4 +1,3 @@
-import time
 from threading import Thread
 import pyttsx3
 import os

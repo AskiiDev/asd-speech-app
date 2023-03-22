@@ -1,7 +1,6 @@
-import os.path
+import os
 
 from nltk.downloader import download
-from dataclasses import dataclass
 import json
 
 download('punkt')
@@ -97,7 +96,7 @@ def get_contexts(word):
     synsets = wordnet.synsets(word)
 
     for s in synsets:
-        # synsets are formatted as "word.pos.n"
+        # synsets are formatted as "word.pos.n, accessed as [0], [1], [2]"
         temp = s.name().split(".")
 
         if temp[0] == word:
@@ -110,10 +109,7 @@ def get_contexts(word):
 # go down until it reaches the root hypernym (entity)
 def traverse_tree(arr, results=None):
     if results is None:
-        results = []
-
-        for hypernym in arr:
-            results.append(hypernym)
+        results = arr
 
     for i in arr:
         name = i.name().split(".")
