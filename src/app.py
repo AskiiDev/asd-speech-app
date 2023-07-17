@@ -34,7 +34,7 @@ def init_kv():
                  "")
         context_colour = [1 * BRIGHTNESS, 1 * BRIGHTNESS, 1 * BRIGHTNESS, BG_ALPHA]
 
-        with open("data/words.json", "r") as j:
+        with open("../data/words.json", "r") as j:
             data = json.load(j)
             for w in data.keys():
                 match (data[w]["pos"][0]):

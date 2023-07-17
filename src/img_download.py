@@ -23,7 +23,7 @@ def init_downloader():
     urllib.request.install_opener(opener)
 
     # get vocabulary list
-    vocab_list = open("data/words.txt", 'r')
+    vocab_list = open("../data/words.txt", 'r')
     vocabulary = vocab_list.read().splitlines()
     downloader_ready = True
 

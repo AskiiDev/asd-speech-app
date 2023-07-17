@@ -179,18 +179,18 @@ def get_all_categories(word, check_forms=False):
 
 
 def init_words():
-    vocab_list = open("data/words.txt", 'r')
+    vocab_list = open("../data/words.txt", 'r')
     vocabulary = vocab_list.read().splitlines()
 
     # check if the file exists, if not create an empty new one
     if not (os.path.isfile("data/words.json") and os.access("data/words.json", os.R_OK)):
-        with open("data/words.json", 'w') as j:
+        with open("../data/words.json", 'w') as j:
             j.write("{}")
             j.close()
 
     # this is much faster than rewriting the file as we only write items that are missing - this operation will be
     # instant if the file is undamaged thus it is very inexpensive to run each time the program opens
-    with open("data/words.json", "r") as j:
+    with open("../data/words.json", "r") as j:
         existing_data = json.load(j)
 
         # update dictionary
@@ -218,7 +218,7 @@ def init_words():
         j.close()
 
     # write back to json
-    with open("data/words.json", "w") as j:
+    with open("../data/words.json", "w") as j:
         # dump to file
         json.dump(existing_data, j, indent=1)
         j.close()
@@ -226,7 +226,7 @@ def init_words():
 
 def get_word(word):
     returned_data = {}
-    with open("data/words.json", "r") as j:
+    with open("../data/words.json", "r") as j:
         data = json.load(j)
 
         try:
@@ -245,7 +245,7 @@ def get_all_words():
     returned_data = {}
 
     try:
-        with open("data/words.json", "r") as j:
+        with open("../data/words.json", "r") as j:
             returned_data = json.load(j)
 
             j.close()
